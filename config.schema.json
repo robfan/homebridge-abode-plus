@@ -4,7 +4,7 @@
 	"singular": true,
 	"strictValidation": false,
 	"headerDisplay": "Brings Abode garage doors, door locks, switches, dimmers and bulbs into HomeKit. Consider a dedicated Abode user for Homebridge.",
-	"footerDisplay": "If your Abode account uses two-factor authentication, paste the authenticator **setup key** (not a 6-digit code) into *2FA Secret*. See the README for how to get it.",
+	"footerDisplay": "**Two-factor authentication:** turn on *Use two-factor authentication* and enter your authenticator **setup key** (letters and digits like `JBSWY3DPEHPK3PXP`), not the 6-digit code your app shows. See the README for how to get the key.",
 	"schema": {
 		"type": "object",
 		"properties": {
@@ -24,10 +24,19 @@
 				"type": "string",
 				"required": true
 			},
+			"useMfa": {
+				"title": "Use two-factor authentication",
+				"type": "boolean",
+				"description": "Turn on if your Abode account asks for an authenticator code when you sign in. Leave off to sign in with just email and password."
+			},
 			"mfaSecret": {
-				"title": "2FA Secret (authenticator setup key)",
+				"title": "2FA Secret (setup key, NOT the 6-digit code)",
 				"type": "string",
-				"description": "Only needed if two-factor authentication is on. The base32 key shown when you set up the authenticator app in Abode (e.g. JBSWY3DPEHPK3PXP). The plugin generates the 6-digit code itself each time it signs in."
+				"placeholder": "e.g. JBSWY3DPEHPK3PXP",
+				"description": "The setup key shown when you enabled two-factor authentication in Abode: a long code of letters A-Z and digits 2-7. Do not enter the 6-digit code from your authenticator app; it expires after 30 seconds. A full otpauth:// link also works. The plugin generates a fresh code from this key every time it signs in.",
+				"condition": {
+					"functionBody": "return model.useMfa === true || (model.useMfa === undefined && !!model.mfaSecret);"
+				}
 			},
 			"garageDoors": {
 				"title": "Garage doors",
@@ -49,16 +58,33 @@
 				"type": "string",
 				"default": "switch",
 				"oneOf": [
-					{ "title": "Switch", "enum": ["switch"] },
-					{ "title": "Light", "enum": ["lightbulb"] },
-					{ "title": "Outlet", "enum": ["outlet"] }
+					{
+						"title": "Switch",
+						"enum": [
+							"switch"
+						]
+					},
+					{
+						"title": "Light",
+						"enum": [
+							"lightbulb"
+						]
+					},
+					{
+						"title": "Outlet",
+						"enum": [
+							"outlet"
+						]
+					}
 				]
 			},
 			"exclude": {
 				"title": "Exclude devices",
 				"description": "Device names or IDs to leave out of HomeKit.",
 				"type": "array",
-				"items": { "type": "string" }
+				"items": {
+					"type": "string"
+				}
 			},
 			"pollingInterval": {
 				"title": "Polling interval (minutes)",
@@ -72,18 +98,39 @@
 	"layout": [
 		"email",
 		"password",
-		"mfaSecret",
+		"useMfa",
+		{
+			"key": "mfaSecret",
+			"condition": {
+				"functionBody": "return model.useMfa === true || (model.useMfa === undefined && !!model.mfaSecret);"
+			}
+		},
 		{
 			"type": "fieldset",
 			"title": "Devices",
 			"expandable": true,
-			"items": ["garageDoors", "locks", "lights", "switchType", { "key": "exclude", "type": "array", "items": ["exclude[]"] }]
+			"items": [
+				"garageDoors",
+				"locks",
+				"lights",
+				"switchType",
+				{
+					"key": "exclude",
+					"type": "array",
+					"items": [
+						"exclude[]"
+					]
+				}
+			]
 		},
 		{
 			"type": "fieldset",
 			"title": "Advanced",
 			"expandable": true,
-			"items": ["name", "pollingInterval"]
+			"items": [
+				"name",
+				"pollingInterval"
+			]
 		}
 	]
 }

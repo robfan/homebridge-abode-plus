@@ -14,6 +14,7 @@ import {
 
 import { AbodeClient, describeError } from "./abode/client";
 import { AbodeSocket } from "./abode/events";
+import { normalizeMfaSecret } from "./abode/totp";
 import { AbodeDevice, AbodeDeviceType } from "./abode/types";
 import { AbodeAccessory, AccessoryContext } from "./accessories/base";
 import { GarageDoorAccessory } from "./accessories/garageDoor";
@@ -24,6 +25,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
 interface AbodeConfig extends PlatformConfig {
 	email?: string;
 	password?: string;
+	useMfa?: boolean;
 	mfaSecret?: string;
 	garageDoors?: boolean;
 	locks?: boolean;
@@ -87,10 +89,29 @@ export class AbodePlatform implements DynamicPlatformPlugin {
 			return;
 		}
 
+		// Older configs have no useMfa flag: fall back to "on if a secret is filled in".
+		const rawSecret = this.config.mfaSecret?.trim() || undefined;
+		const useMfa = this.config.useMfa ?? Boolean(rawSecret);
+		let mfaSecret: string | undefined;
+		if (useMfa) {
+			if (!rawSecret) {
+				this.log.error('Two-factor authentication is turned on but "2FA Secret" (mfaSecret) is empty.');
+				return;
+			}
+			try {
+				mfaSecret = normalizeMfaSecret(rawSecret);
+			} catch (error) {
+				this.log.error(describeError(error));
+				return;
+			}
+		} else if (rawSecret) {
+			this.log.info("Two-factor authentication is turned off in the config; ignoring the saved 2FA secret.");
+		}
+
 		this.client = new AbodeClient({
 			email,
 			password,
-			mfaSecret: this.config.mfaSecret?.trim() || undefined,
+			mfaSecret,
 			deviceUuid: this.loadDeviceUuid(),
 			userAgent: `Homebridge/${this.api.serverVersion}`,
 			log: this.log,

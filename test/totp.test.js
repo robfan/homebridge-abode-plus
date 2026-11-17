@@ -30,3 +30,26 @@ test("accepts lowercase, spaces and padding", () => {
 test("rejects non-base32 input", () => {
 	assert.throws(() => base32Decode("123456"), /Invalid character/);
 });
+
+const { normalizeMfaSecret } = require("../dist/abode/totp");
+
+test("normalizes a setup key with spaces and lowercase", () => {
+	assert.strictEqual(normalizeMfaSecret(" jbsw y3dp ehpk 3pxp "), "JBSWY3DPEHPK3PXP");
+});
+
+test("extracts the secret from an otpauth:// link", () => {
+	assert.strictEqual(
+		normalizeMfaSecret("otpauth://totp/Abode:me%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Abode"),
+		"JBSWY3DPEHPK3PXP",
+	);
+});
+
+test("rejects a 6-digit one-time code with a clear message", () => {
+	assert.throws(() => normalizeMfaSecret("482913"), /one-time code.*setup key/s);
+	assert.throws(() => normalizeMfaSecret("482 913"), /one-time code/);
+});
+
+test("rejects keys that are too short or not base32", () => {
+	assert.throws(() => normalizeMfaSecret("JBSWY3DP"), /only 8 characters/);
+	assert.throws(() => normalizeMfaSecret("JBSWY3DPEHPK3PX1"), /A-Z and digits 2-7/);
+});

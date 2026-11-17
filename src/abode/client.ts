@@ -126,11 +126,11 @@ export class AbodeClient {
 		if (data.mfa_type) {
 			if (mfaSecret) {
 				throw new AbodeAuthError(
-					`Abode rejected the 2FA code (mfa_type "${data.mfa_type}"). Check that "mfaSecret" is the setup key for this account and that the Homebridge host's clock is correct.`,
+					`Abode rejected the 2FA code (mfa_type "${data.mfa_type}"). Check that "2FA Secret" is the setup key for this account (not a 6-digit code) and that the Homebridge host's clock is correct.`,
 				);
 			}
 			throw new AbodeAuthError(
-				`This Abode account has two-factor authentication enabled (mfa_type "${data.mfa_type}"). Add your authenticator setup key as "mfaSecret" in the plugin config.`,
+				`This Abode account has two-factor authentication enabled (mfa_type "${data.mfa_type}"). Turn on "Use two-factor authentication" in the plugin settings and enter your 2FA secret (the setup key, not a 6-digit code).`,
 			);
 		}
 

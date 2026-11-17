@@ -51,7 +51,7 @@ const makeClient = (mfaSecret) => {
 };
 
 test("explains that 2FA is required when no secret is configured", async () => {
-	await assert.rejects(makeClient().login(), /two-factor authentication enabled.*mfaSecret/);
+	await assert.rejects(makeClient().login(), /two-factor authentication enabled.*Use two-factor authentication/);
 });
 
 test("signs in with a generated 2FA code and calls the API with all auth headers", async () => {

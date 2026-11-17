@@ -1,7 +1,7 @@
 {
 	"name": "homebridge-abode-plus",
 	"displayName": "Homebridge Abode",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Homebridge plugin that brings Abode garage doors, door locks, switches, dimmers and bulbs into HomeKit, with two-factor authentication support.",
 	"author": "Rob Fan",
 	"license": "MIT",

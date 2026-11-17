@@ -28,12 +28,25 @@ npm install -g homebridge-abode-plus
 
 Enter the email and password for your Abode account. A dedicated Abode user just for Homebridge is a good idea.
 
+**Without two-factor authentication:**
+
+```json
+{
+	"platform": "AbodePlus",
+	"email": "YOUR_ABODE_ACCOUNT_EMAIL",
+	"password": "YOUR_ABODE_ACCOUNT_PASSWORD"
+}
+```
+
+**With two-factor authentication:**
+
 ```json
 {
 	"platform": "AbodePlus",
 	"email": "YOUR_ABODE_ACCOUNT_EMAIL",
 	"password": "YOUR_ABODE_ACCOUNT_PASSWORD",
-	"mfaSecret": "YOUR_AUTHENTICATOR_SETUP_KEY"
+	"useMfa": true,
+	"mfaSecret": "JBSWY3DPEHPK3PXP"
 }
 ```
 
@@ -41,7 +54,8 @@ Enter the email and password for your Abode account. A dedicated Abode user just
 | ----------------- | ---------- | ----------- |
 | `email`           |            | Abode account email. |
 | `password`        |            | Abode account password. |
-| `mfaSecret`       |            | Authenticator setup key, only if 2FA is on. See below. |
+| `useMfa`          | `false`    | `true` if your Abode account uses two-factor authentication. Leave it off to sign in with just email and password. (Configs from before this option existed count as `true` when `mfaSecret` is filled in.) |
+| `mfaSecret`       |            | The 2FA **setup key** (not a 6-digit code). Only used when `useMfa` is `true`. See below. |
 | `garageDoors`     | `true`     | Include garage doors. |
 | `locks`           | `true`     | Include door locks. |
 | `lights`          | `true`     | Include switches, dimmers and bulbs. |
@@ -51,20 +65,33 @@ Enter the email and password for your Abode account. A dedicated Abode user just
 
 ### Two-factor authentication
 
-Abode's 2FA uses an authenticator app (Google Authenticator, 1Password, Authy…). A 6-digit code is only valid for 30 seconds, but Homebridge has to sign in again on its own (after restarts and when the session expires), so the plugin needs the **setup key** the codes are generated from. With that it produces a fresh code every time it signs in, just like your authenticator app.
+> [!IMPORTANT]
+> `mfaSecret` is the **2FA secret (setup key)**, a long code like `JBSWY3DPEHPK3PXP`.
+> It is **not** the 6-digit one-time code (OTP) your authenticator app shows, like `482913`.
+> A 6-digit code expires after 30 seconds, so the plugin couldn't use it to sign in again later. The plugin refuses to start if you enter one.
 
-To get the setup key:
+| | 2FA secret / setup key ✅ | One-time code (OTP) ❌ |
+| --- | --- | --- |
+| Looks like | `JBSWY3DPEHPK3PXP` (16+ letters A–Z and digits 2–7) | `482913` (6 digits) |
+| Changes? | Never | Every 30 seconds |
+| Where you see it | Once, when you set up 2FA (the "enter key manually" option under the QR code) | In your authenticator app, all the time |
+
+Abode's 2FA uses an authenticator app (Google Authenticator, 1Password, Authy…). Homebridge has to sign in on its own after restarts and whenever the session expires, so it needs the secret your app generates codes from. With it, the plugin makes a fresh code every time it signs in, just like your app does.
+
+To get the 2FA secret:
 
 1. In the Abode web app ([my.goabode.com](https://my.goabode.com)), open your account's security settings and find two-factor authentication.
 2. If 2FA is already on, turn it off and on again to get a new QR code. (Your old authenticator entry will stop working; replace it with the new one.)
-3. When the QR code appears, choose the option to enter the key manually / "can't scan" and copy the key (letters A–Z and digits 2–7, e.g. `JBSWY3DPEHPK3PXP`).
-   - Password managers like 1Password show this key in the item's one-time-password field after you add the QR code.
+3. Under the QR code, choose the option to enter the key manually ("can't scan?") and copy the key.
+   - If you use 1Password: after adding the QR code to an item, edit the one-time password field; it holds an `otpauth://…` link. You can paste that whole link, and the plugin pulls the secret out of it.
 4. Scan the QR code in your authenticator app as usual and finish enrolling.
-5. Paste the key into **2FA Secret** (`mfaSecret`) in the plugin settings and restart Homebridge.
+5. In the plugin settings, turn on **Use two-factor authentication**, paste the key into **2FA Secret**, save, and restart Homebridge.
 
-Treat the setup key like a password: anyone with it plus your password can sign in to your Abode account. The Homebridge host's clock must be accurate (NTP), since codes are time-based.
+Treat the secret like a password: anyone with it and your password can sign in to your Abode account. The Homebridge host's clock must be accurate (NTP), since codes are time-based.
 
-If 2FA is on and `mfaSecret` is missing, the log says so explicitly instead of failing silently.
+If your account requires 2FA and the plugin isn't set up for it, the log says so explicitly instead of failing silently.
+
+To turn 2FA off in the plugin (for example, after turning it off in Abode), set `useMfa` to `false`. Any saved secret is then ignored.
 
 ## Migrating from homebridge-abode-garage-doors, -locks or -lights
 

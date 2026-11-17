@@ -54,6 +54,44 @@ export const generateTotp = (secret: string, timestampMs: number = Date.now(), s
 	return String(binary % 10 ** digits).padStart(digits, "0");
 };
 
+/**
+ * Turn whatever the user pasted into a usable base32 secret, or explain what's wrong with it.
+ * Accepts a bare setup key (any case, with spaces) or a full otpauth:// link from a QR code.
+ */
+export const normalizeMfaSecret = (input: string): string => {
+	let value = input.trim();
+
+	if (/^otpauth:\/\//i.test(value)) {
+		let secret: string | null = null;
+		try {
+			secret = new URL(value).searchParams.get("secret");
+		} catch {
+			// fall through to the error below
+		}
+		if (!secret) throw new Error('The 2FA secret is an otpauth:// link without a "secret=" value.');
+		value = secret;
+	}
+
+	const cleaned = value.replace(/[\s=-]/g, "").toUpperCase();
+
+	if (/^\d{6,8}$/.test(cleaned)) {
+		throw new Error(
+			"The 2FA secret looks like a one-time code from your authenticator app. Those expire after 30 seconds. " +
+				"Enter the setup key instead: the long code of letters A-Z and digits 2-7 shown when 2FA was set up.",
+		);
+	}
+	if (!/^[A-Z2-7]+$/.test(cleaned)) {
+		throw new Error("The 2FA secret should be the base32 setup key: letters A-Z and digits 2-7 only.");
+	}
+	if (cleaned.length < 16) {
+		throw new Error(
+			`The 2FA secret is only ${cleaned.length} characters; setup keys are at least 16. Check that you copied the whole key.`,
+		);
+	}
+
+	return cleaned;
+};
+
 /** Seconds left before the current code rolls over. */
 export const totpSecondsRemaining = (timestampMs: number = Date.now(), step = 30): number => {
 	return step - (Math.floor(timestampMs / 1000) % step);
