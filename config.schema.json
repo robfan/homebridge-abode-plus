@@ -1,0 +1,89 @@
+{
+	"pluginAlias": "AbodePlus",
+	"pluginType": "platform",
+	"singular": true,
+	"strictValidation": false,
+	"headerDisplay": "Brings Abode garage doors, door locks, switches, dimmers and bulbs into HomeKit. Consider a dedicated Abode user for Homebridge.",
+	"footerDisplay": "If your Abode account uses two-factor authentication, paste the authenticator **setup key** (not a 6-digit code) into *2FA Secret*. See the README for how to get it.",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"name": {
+				"title": "Name",
+				"type": "string",
+				"default": "Abode"
+			},
+			"email": {
+				"title": "Email",
+				"type": "string",
+				"format": "email",
+				"required": true
+			},
+			"password": {
+				"title": "Password",
+				"type": "string",
+				"required": true
+			},
+			"mfaSecret": {
+				"title": "2FA Secret (authenticator setup key)",
+				"type": "string",
+				"description": "Only needed if two-factor authentication is on. The base32 key shown when you set up the authenticator app in Abode (e.g. JBSWY3DPEHPK3PXP). The plugin generates the 6-digit code itself each time it signs in."
+			},
+			"garageDoors": {
+				"title": "Garage doors",
+				"type": "boolean",
+				"default": true
+			},
+			"locks": {
+				"title": "Door locks",
+				"type": "boolean",
+				"default": true
+			},
+			"lights": {
+				"title": "Lights (switches, dimmers, bulbs, Hue)",
+				"type": "boolean",
+				"default": true
+			},
+			"switchType": {
+				"title": "Show on/off switches as",
+				"type": "string",
+				"default": "switch",
+				"oneOf": [
+					{ "title": "Switch", "enum": ["switch"] },
+					{ "title": "Light", "enum": ["lightbulb"] },
+					{ "title": "Outlet", "enum": ["outlet"] }
+				]
+			},
+			"exclude": {
+				"title": "Exclude devices",
+				"description": "Device names or IDs to leave out of HomeKit.",
+				"type": "array",
+				"items": { "type": "string" }
+			},
+			"pollingInterval": {
+				"title": "Polling interval (minutes)",
+				"description": "Backup full refresh in addition to Abode's live updates. 0 turns it off.",
+				"type": "integer",
+				"default": 5,
+				"minimum": 0
+			}
+		}
+	},
+	"layout": [
+		"email",
+		"password",
+		"mfaSecret",
+		{
+			"type": "fieldset",
+			"title": "Devices",
+			"expandable": true,
+			"items": ["garageDoors", "locks", "lights", "switchType", { "key": "exclude", "type": "array", "items": ["exclude[]"] }]
+		},
+		{
+			"type": "fieldset",
+			"title": "Advanced",
+			"expandable": true,
+			"items": ["name", "pollingInterval"]
+		}
+	]
+}

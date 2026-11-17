@@ -1,0 +1,49 @@
+{
+	"name": "homebridge-abode-plus",
+	"displayName": "Homebridge Abode",
+	"version": "1.0.0",
+	"description": "Homebridge plugin that brings Abode garage doors, door locks, switches, dimmers and bulbs into HomeKit, with two-factor authentication support.",
+	"author": "Rob Fan",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"files": [
+		"dist",
+		"config.schema.json",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "rm -rf dist && tsc",
+		"test": "npm run build && node --test test/*.test.js",
+		"prepublishOnly": "npm test"
+	},
+	"engines": {
+		"homebridge": "^1.8.0 || ^2.0.0",
+		"node": "^20.18.0 || ^22.10.0 || ^24.0.0"
+	},
+	"keywords": [
+		"homebridge-plugin",
+		"abode",
+		"garage door",
+		"lock",
+		"light",
+		"dimmer"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/robfan/homebridge-abode-plus.git"
+	},
+	"bugs": {
+		"url": "https://github.com/robfan/homebridge-abode-plus/issues"
+	},
+	"dependencies": {
+		"axios": "^1.21.1",
+		"ws": "^8.23.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"@types/ws": "^8.18.2",
+		"homebridge": "^2.5.0",
+		"typescript": "^5.9.3"
+	}
+}
